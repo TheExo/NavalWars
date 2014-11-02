@@ -1,17 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package logicPackage;
 
 import java.util.ArrayList;
 
-/**
- *
- * @author Seth
- */
 public class Ocean{   
     public int oceanDepth = 10000000; //bellow this depth sub will explode
     public int spawnRange = 400;

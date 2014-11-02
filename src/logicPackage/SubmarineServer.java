@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package logicPackage;
 
 import java.io.DataInputStream;
@@ -22,7 +16,6 @@ class SubmarineServer extends Thread{
             steeringWorking = true, diveControlWorking = true;
     protected int posX, posY, depth;
     protected int angleFacing = 0; //angle (360) sub is pointing
-    
     //radar canection
     Radar radar;
     private ArrayList<Coordenates> radarCheck = new ArrayList();
@@ -37,9 +30,10 @@ class SubmarineServer extends Thread{
     DataInputStream incomming = null;
     DataOutputStream outgoing = null;
     
-    SubmarineServer(Socket client, Ocean ocean){
+    SubmarineServer(DataOutputStream outgoing, DataInputStream incomming, Socket client, Ocean ocean, LoggingServer log){
         this.ocean = ocean;  
-        
+        this.incomming = incomming;
+        this.outgoing = outgoing;
         
         //spawn sub in ocean
         spawnSub();
@@ -53,25 +47,19 @@ class SubmarineServer extends Thread{
     //sub's server thread
     @Override
     public void run(){
-        try {
-            outgoing = new DataOutputStream(client.getOutputStream());
-            incomming = new DataInputStream(client.getInputStream());
-        } catch (IOException ex) {
-            Logger.getLogger(SubmarineServer.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
+                
         while(this.subAlive){
           
-            try {
+            try { 
                 pushSubAtributes();
             } catch (IOException ex){
                 Logger.getLogger(SubmarineServer.class.getName()).log(Level.SEVERE, null, ex);
             }
             //scan the area around and recieve the list
-            radar.scan(posX, posY, ocean.radarRange);  
+            radar.scan(posX, posY, ocean.radarRange);
             radarCheck = radar.returnCoor();
             
-            //System.out.println(ocean.submarines.size());
+            
             
             //if sub is too deap explodes
             if(this.depth <= 0){

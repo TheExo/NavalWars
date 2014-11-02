@@ -1,14 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package logicPackage;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,8 +14,13 @@ public class Server extends Thread{
     private static final int serverPort = 1995;
     private boolean serverAlive = true;
     
+    DataOutputStream outgoing;
+    DataInputStream incomming;
+    
     Socket client;
     Ocean ocean = new Ocean();
+    public ArrayList<Team> teams = new ArrayList();
+    LoggingServer log;
     
     public static void main(String[] args) throws IOException {    
         Server server = new Server();
@@ -38,11 +40,13 @@ public class Server extends Thread{
             //listen for client
             try {
                 client = serv.accept();
+                outgoing = new DataOutputStream(client.getOutputStream());
+                incomming = new DataInputStream(client.getInputStream());
             } catch (IOException ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             }
             
-            SubmarineServer sub = new SubmarineServer(client, ocean);
+            SubmarineServer sub = new SubmarineServer(outgoing, incomming, client, ocean, log);
             sub.start(); //start clients thread
             System.out.println("A Client Connected!");
 
