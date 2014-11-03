@@ -3,6 +3,8 @@ package logicPackage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Random;
@@ -17,8 +19,8 @@ class SubmarineServer extends Thread{
     protected int posX, posY, depth;
     protected int angleFacing = 0; //angle (360) sub is pointing
     //radar canection
-    Radar radar;
-    private ArrayList<Coordenates> radarCheck = new ArrayList();
+    RadarServer radar;
+    private ArrayList<CoordinatesServer> radarCheck = new ArrayList();
     
     //target position
     protected int targetDepth, targetAngle;
@@ -27,28 +29,30 @@ class SubmarineServer extends Thread{
     Ocean ocean;
             
     //connection stuff
-    DataInputStream incomming = null;
+    DataInputStream incoming = null;
     DataOutputStream outgoing = null;
     
     SubmarineServer(DataOutputStream outgoing, DataInputStream incomming, Socket client, Ocean ocean, LoggingServer log){
         this.ocean = ocean;  
-        this.incomming = incomming;
+        this.incoming = incomming;
         this.outgoing = outgoing;
+        
         
         //spawn sub in ocean
         spawnSub();
         this.client = client;
         
         ocean.submarines.add((SubmarineServer)this);
-        radar = new Radar(ocean);
+        radar = new RadarServer(ocean);
         
     }
     
     //sub's server thread
     @Override
     public void run(){
-                
+
         while(this.subAlive){
+            
           
             try { 
                 pushSubAtributes();
@@ -60,6 +64,11 @@ class SubmarineServer extends Thread{
             radarCheck = radar.returnCoor();
             
             
+            try {
+                pushRadar();
+            } catch (IOException ex) {
+                Logger.getLogger(SubmarineServer.class.getName()).log(Level.SEVERE, null, ex);
+            }
             
             //if sub is too deap explodes
             if(this.depth <= 0){
@@ -71,9 +80,7 @@ class SubmarineServer extends Thread{
             } catch (InterruptedException ex) {
                 Logger.getLogger(SubmarineServer.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }
-        //sub dead
-    }
+        }    }
     
     //spawn players sub in ocean within defined spawn area
     void spawnSub(){
@@ -94,6 +101,20 @@ class SubmarineServer extends Thread{
         System.out.println("posX spawn is " + posX +  " and posZ is " + depth);
     }
     
+    public void pushRadar() throws IOException{
+        if (null == radarCheck)
+            outgoing.writeInt(0);
+        
+        else {
+            outgoing.writeInt(radarCheck.size());
+            for(int i = 0; radarCheck.size()>i; i++){
+                outgoing.writeInt(radarCheck.get(i).points.get(0));
+                outgoing.writeInt(radarCheck.get(i).points.get(1));
+                outgoing.writeInt(radarCheck.get(i).points.get(2));
+            }
+        }
+    }
+    
     private void pushSubAtributes() throws IOException{
         //sub statcs
         outgoing.writeBoolean(subAlive);
@@ -107,47 +128,5 @@ class SubmarineServer extends Thread{
         outgoing.writeInt(depth);
         outgoing.writeInt(angleFacing);
     }
-    
-    /* return ocuppied points within the sonar degree line
-    and sonar range */
-    public int[][] sonar(int degree){
-        int[][] occupied = new int[ocean.radarRange / 2][2];
-        int[] pos;
-        ArrayList ocuppiedPositions = new ArrayList();
-        
-        int numSubs = ocean.submarines.size();
-        for(int i =0; i < numSubs; i++){
-            int posXotherSub = ocean.submarines.get(i).posX;
-            int posYotherSub = ocean.submarines.get(i).posY;
-            //if other sub is in radar range
-            if(Math.abs(this.posX - posXotherSub) < ocean.radarRange  && 
-                    Math.abs(this.posY - posYotherSub) < ocean.radarRange){
-                pos = new int[2];
-                pos[0] = posXotherSub;
-                pos[1] = posYotherSub;
-                ocuppiedPositions.add(pos);
-            }
-            numSubs = ocean.submarines.size();
-        }
-        
-        int uncertainty = 4; //degrees of acceptable error
-        int circleCuadrant = 0;       
-        
-        if(degree > 0)
-            circleCuadrant = 1;
-        else if(degree > 90)
-            circleCuadrant = 2;
-        else if(degree > 180){
-            circleCuadrant = 3;
-        }else if(degree > 270)
-            circleCuadrant = 4;
-        
-        if(circleCuadrant == 4 || circleCuadrant == 0 || circleCuadrant == 1){
-            
-        }else{
-            
-        }
-                
-        return occupied;        
-    }
+      
 }

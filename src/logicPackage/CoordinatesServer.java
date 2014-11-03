@@ -2,11 +2,11 @@ package logicPackage;
 
 import java.util.ArrayList;
 
-public class Coordenates {
+public class CoordinatesServer {
     
     public ArrayList<Integer> points = new ArrayList();
 
-    public Coordenates(int posX, int posY, int depth) {
+    public CoordinatesServer(int posX, int posY, int depth) {
         points.add(posX);
         points.add(posY);
         points.add(depth);
